@@ -8,10 +8,76 @@ const io = require('socket.io')(http,{
 let players = [];
 const cors = require("cors");
 
+const {
+    updateSocketUserConnectionData,
+    deleteSocketUserConnectionData,
+  } = require("./src/util/connectionDirectory");
+
 server.use(cors());
 
 io.on('connection', function (socket) {
+
     console.log('A user connected: ' + socket.id);
+
+    // socket data init
+
+    updateSocketUserConnectionData(
+        socket.id,
+        {
+          userId: "null",
+          room: "null",
+        },
+        true
+      );
+  
+      console.log(`[CONN-REQ] ${socket.id}`);
+  
+      socket.on("USER-CONNECTION-REQUEST", (d) => {
+
+        unitConnectionId = d.room;
+  
+        console.log(
+          `[CONN-DATA] ${
+            socket.id
+          } Unit-Connection-Id ${unitConnectionId} Data: ${JSON.stringify(d)}`
+        );  
+        socket.join(socket.id);
+        updateSocketUserConnectionData(socket.id, d, false);
+      });
+  
+      socket.on("GROUP-CONNECTION-REQUEST", (d) => {
+        // TODO: remove console log
+  
+        console.log(d);
+        unitConnectionId = d.room;
+  
+        console.log(
+          `[CONN-GP-DATA] ${
+            socket.id
+          } Unit-Connection-Id ${unitConnectionId} Data: ${JSON.stringify(d)}`
+        );
+  
+        socket.join(socket.id);
+        updateSocketUserConnectionData(socket.id, d, false);
+      });
+  
+      socket.on(
+        "disconnect",
+        () => {
+          socketUserLogger.info(`[CONN-DISC] ${socket.id}`);
+          deleteSocketUserConnectionData(socket.id);
+        }
+        //TODO:  remove socket connection data from redis
+      );
+
+
+    socket.on('create-room', function () {
+            
+    })
+    
+    socket.on('join-room', function (playerName, socketRoom, isReturningBack) {
+        
+    })
 
     players.push(socket.id);
 
